@@ -8,7 +8,7 @@ package com.company;
 
 public class Delete {
     public static void main(String[] args) {
-        JDBC_Utils tool = new JDBC_Utils();
+        JDBC_Utils_Type tool = new JDBC_Utils_Type();
         tool.deletes(3);
     }
 }

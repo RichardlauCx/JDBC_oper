@@ -15,9 +15,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class JDBC_Utils {
+public class JDBC_Utils_Type {
     /**
      * 针对当前 jdbc:mysql://127.0.0.1:3306/test 数据库所实现的快速工具接口
+     * 根据指定类型的封装
      */
     // 先放一些默认参数
     private String url = "jdbc:mysql://127.0.0.1:3306/test?" +
@@ -27,7 +28,7 @@ public class JDBC_Utils {
     private Connection conn = null;
     boolean flag = true;
 
-    public JDBC_Utils(String url_, String user_, String password_, boolean flag)
+    public JDBC_Utils_Type(String url_, String user_, String password_, boolean flag)
     {  // 构造方法
         url = url_;
         user = user_;
@@ -35,7 +36,7 @@ public class JDBC_Utils {
         this.flag = flag;
     }
 
-    public JDBC_Utils() {
+    public JDBC_Utils_Type() {
         // 无参构造函数
     }
 
@@ -186,25 +187,49 @@ public class JDBC_Utils {
     }
 
 
-    public void upDate(String column, String value, int id) {
+    public void alter() {
+        /**
+         *修改数据库
+         * TODO 有待修改
+         */
+
+        Connection con = getConn();
+
+        PreparedStatement ps = null;
+        String sql = "alter table test change column_1 column int";
+
+        try {
+            ps = con.prepareStatement(sql);
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            close(con, ps, null, null);
+        }
+    }
+
+
+    public void upDate(String column_1, String value_1, String column_2, String value_2) {
         /**
          * 更新操作
-         * @param column 针对要更新的列名
+         * @param column_1 针对要更新的列名
          * @param value 对应要改为的具体值
+         * @param column_2 要更新的条件列名
          * @param id 对应此列要更新值的id值
          */
 
         Connection con = getConn();
         PreparedStatement ps = null;
-        String sql = "update table_1 set " + column + "='" + value + "' where id=" + id;
+        String sql = "update table_1 set " + column_1 + "='" + value_1 + "' where " + column_2 + "=" + value_2;
 
-            try {
-                ps = con.prepareStatement(sql);
-                ps.executeUpdate();
+        try {
+            ps = con.prepareStatement(sql);
+            ps.executeUpdate();
 
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
     }
 

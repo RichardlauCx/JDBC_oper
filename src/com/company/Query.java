@@ -12,7 +12,7 @@ import java.sql.SQLException;
 
 public class Query {
     public static void main(String[] args) {
-        JDBC_Utils tool = new JDBC_Utils();
+        JDBC_Utils_Type tool = new JDBC_Utils_Type();
 
         try {
                 tool.findAll();

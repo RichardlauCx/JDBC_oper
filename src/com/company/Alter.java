@@ -6,16 +6,9 @@ package com.company;
 //  @ file   : Richard.Java
 //  @ IDE    : IDEA
 
-public class Update {
+public class Alter {
     public static void main(String[] args) {
         JDBC_Utils_Type tool = new JDBC_Utils_Type();
-        // 更改列
-        String column_1 = "id";
-        String value_1 = "7";
-
-        // 条件列
-        String column_2 = "column_1";
-        String value_2 = "6";
-        tool.upDate(column_1, value_1, column_2, value_2);
+        tool.alter();
     }
 }
