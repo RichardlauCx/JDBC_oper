@@ -6,14 +6,10 @@ package com.company;
 //  @ file   : Richard.Java
 //  @ IDE    : IDEA
 
-import com.mysql.cj.x.protobuf.MysqlxCrud;
-import jdk.nashorn.internal.ir.Flags;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class JDBC_Utils_Type {
     /**
@@ -79,7 +75,7 @@ public class JDBC_Utils_Type {
     }
 
 
-    public void inserts(Test test) throws SQLException {
+    public void inserts(table_1 table1) throws SQLException {
         // 添加操作
         PreparedStatement ps = null;
         String sql = "insert into test(column_1, id, name, sex, age)values(?,?,?)";
@@ -87,11 +83,11 @@ public class JDBC_Utils_Type {
 
         try {
             ps = conn.prepareStatement(sql);
-            ps.setInt(1, test.getColumn_1());
-            ps.setInt(2, test.getId());
-            ps.setString(3, test.getName());
-            ps.setString(4, test.getSex());
-            ps.setInt(5, test.getAge());
+            ps.setInt(1, table1.getColumn_1());
+            ps.setInt(2, table1.getId());
+            ps.setString(3, table1.getName());
+            ps.setString(4, table1.getSex());
+            ps.setInt(5, table1.getAge());
             ps.executeUpdate();
 
         } catch (SQLException e) {
@@ -104,7 +100,7 @@ public class JDBC_Utils_Type {
     }
 
 
-    public List<Test> findAll() throws SQLException {
+    public List<table_1> findAll() throws SQLException {
         /**
          * 查询所有数据
          * @return 查询到的以行为单位，以Test对象为元素的动态数组
@@ -116,8 +112,8 @@ public class JDBC_Utils_Type {
         String joint = String.join("", Collections.nCopies(n - 1, temp));
         PreparedStatement pre_state = null;
         ResultSet resultSet = null;
-        Test test = null;
-        List<Test> testList = new ArrayList<Test>();
+        table_1 table1 = null;
+        List<table_1> table1List = new ArrayList<table_1>();
         String sql = "select * from table_1";
         Connection conn = getConn();
 
@@ -128,18 +124,18 @@ public class JDBC_Utils_Type {
 
             while (resultSet.next()) {
                 // 循环获取每一行的数据，并以对象为元素存入动态数组中
-                test = new Test();
-                test.setColumn_1(resultSet.getInt(1));
-                test.setId(resultSet.getInt(2));
-                test.setName(resultSet.getString(3));
-                test.setSex(resultSet.getString(4));
-                test.setAge(resultSet.getInt(5));
+                table1 = new table_1();
+                table1.setColumn_1(resultSet.getInt(1));
+                table1.setId(resultSet.getInt(2));
+                table1.setName(resultSet.getString(3));
+                table1.setSex(resultSet.getString(4));
+                table1.setAge(resultSet.getInt(5));
 
-                testList.add(test);
+                table1List.add(table1);
             }
 
             System.out.println("col" + joint + "id" + joint + "name" + joint + "gender" + joint + "age");
-            for (Test rows: testList) {
+            for (table_1 rows: table1List) {
                 // 取出数据项
                 System.out.print(rows.getColumn_1() + " ");
                 System.out.print(rows.getId() + " ");
@@ -183,7 +179,7 @@ public class JDBC_Utils_Type {
             close(conn, pre_state, null, resultSet);
         }
 
-        return testList;
+        return table1List;
     }
 
 

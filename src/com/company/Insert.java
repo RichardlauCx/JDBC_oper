@@ -10,6 +10,31 @@ import java.sql.*;
 
 public class Insert {
     public static void main(String[] args) {
+        generics();
+    }
+
+
+    public static void generics() {
+        // 泛型的JDBC工具调用
+        table_1 table1 = new table_1();
+        table1.setColumn_1(2);
+        table1.setId(3);
+        table1.setName("Spider_Man");
+        table1.setSex("男");
+        table1.setAge(21);
+
+        JDBC_Utils_Generics tool_g = new JDBC_Utils_Generics();
+        try {
+            tool_g.inserts(table1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+    public static void type() {
+        // 指定类型的JDBC工具调用
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (ClassNotFoundException e) {
@@ -39,6 +64,5 @@ public class Insert {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
     }
 }

@@ -16,6 +16,7 @@ public class JDBC_Utils_Generics {
     /**
      * 针对当前 jdbc:mysql://127.0.0.1:3306/test 数据库所实现的快速工具接口
      * 通过泛型来实现封装
+     * 将实现只需传入对应的，和数据库中表结构字段名，以及类型一致的数据对象，调用接口方法即可实现对应操作
      */
     // 先放一些默认参数
     private String url = "jdbc:mysql://127.0.0.1:3306/test?" +
@@ -76,22 +77,45 @@ public class JDBC_Utils_Generics {
     }
 
 
-    public void inserts(Test test) throws SQLException {
+    public void inserts(Object obj) throws SQLException {
         // 添加操作
         PreparedStatement ps = null;
-        String sql = "insert into test(column_1, id, name, sex, age)values(?,?,?)";
+        Class<?> c = obj.getClass();
+        StringBuilder sql_sb = new StringBuilder("insert into " + c.getSimpleName() + "(");  // test(column_1, id, name, sex, age)values(?,?,?)");
         Connection conn = getConn();
 
-        try {
-            ps = conn.prepareStatement(sql);
-            ps.setInt(1, test.getColumn_1());
-            ps.setInt(2, test.getId());
-            ps.setString(3, test.getName());
-            ps.setString(4, test.getSex());
-            ps.setInt(5, test.getAge());
-            ps.executeUpdate();
+        Field[] fields = c.getDeclaredFields();
+        for (int i=0; i < fields.length; i++) {
+            if (i != fields.length-1) {
+                sql_sb.append(fields[i].getName()).append(",");
+            } else {
+                sql_sb.append(fields[i].getName()).append(") ");
+            }
+        }
 
-        } catch (SQLException e) {
+        sql_sb.append("values(");
+
+        for (int i=0; i < fields.length; i++) {
+            if (i != fields.length-1) {
+                sql_sb.append("?,");
+            } else {
+                sql_sb.append("?)");
+            }
+
+        }
+
+        ps = conn.prepareStatement(sql_sb.toString());
+
+        try {
+
+        for (int i=0; i < fields.length; i++) {
+                fields[i].setAccessible(true);
+                ps.setObject(i+1, fields[i].get(obj));
+            }
+
+            ps.execute();
+
+        } catch (SQLException | IllegalAccessException e) {
             e.printStackTrace();
             throw new SQLException("添加数据失败");
 
@@ -101,7 +125,7 @@ public class JDBC_Utils_Generics {
     }
 
 
-    public List<Test> findAll() throws SQLException {
+    public List<table_1> findAll() throws SQLException {
         /**
          * 查询所有数据
          * @return 查询到的以行为单位，以Test对象为元素的动态数组
@@ -113,8 +137,8 @@ public class JDBC_Utils_Generics {
         String joint = String.join("", Collections.nCopies(n - 1, temp));
         PreparedStatement pre_state = null;
         ResultSet resultSet = null;
-        Test test = null;
-        List<Test> testList = new ArrayList<Test>();
+        table_1 table1 = null;
+        List<table_1> table1List = new ArrayList<table_1>();
         String sql = "select * from table_1";
         Connection conn = getConn();
 
@@ -125,18 +149,18 @@ public class JDBC_Utils_Generics {
 
             while (resultSet.next()) {
                 // 循环获取每一行的数据，并以对象为元素存入动态数组中
-                test = new Test();
-                test.setColumn_1(resultSet.getInt(1));
-                test.setId(resultSet.getInt(2));
-                test.setName(resultSet.getString(3));
-                test.setSex(resultSet.getString(4));
-                test.setAge(resultSet.getInt(5));
+                table1 = new table_1();
+                table1.setColumn_1(resultSet.getInt(1));
+                table1.setId(resultSet.getInt(2));
+                table1.setName(resultSet.getString(3));
+                table1.setSex(resultSet.getString(4));
+                table1.setAge(resultSet.getInt(5));
 
-                testList.add(test);
+                table1List.add(table1);
             }
 
             System.out.println("col" + joint + "id" + joint + "name" + joint + "gender" + joint + "age");
-            for (Test rows: testList) {
+            for (table_1 rows: table1List) {
                 // 取出数据项
                 System.out.print(rows.getColumn_1() + " ");
                 System.out.print(rows.getId() + " ");
@@ -180,7 +204,7 @@ public class JDBC_Utils_Generics {
             close(conn, pre_state, null, resultSet);
         }
 
-        return testList;
+        return table1List;
     }
 
 
@@ -192,24 +216,41 @@ public class JDBC_Utils_Generics {
 
         PreparedStatement ps = null;
         Class<?> c = obj.getClass();  // 获取obj的类实例
-        StringBuffer sql_sb = new StringBuffer("update " + c.getSimpleName() + " set ");  // 利用StringBuffer进行修改SQL语句的构造
+        StringBuilder sql_sb = new StringBuilder("update " + c.getSimpleName() + " set ");
+        // 利用StringBuilder进行修改SQL语句的构造，单线程进行，效率更高，但不具备线程安全
         Field[] fields = c.getDeclaredFields();  // 通过反射获取对象的属性数组
         Connection con = getConn();
 
         for (int i=1; i < fields.length; i++) {
             if (i != fields.length-1) {
                 // 判断是否为最后一个属性，若不是则后增加逗号
-                sql_sb.append(fields[i].getName()).append("=?, ");  // 语句内容追加
+                sql_sb.append(fields[i].getName()).append("=?, ");  // SQL语句内容追加
+            }
+
+            else {
+                // 若为最后一个属性则添加where
+                sql_sb.append(fields[i].getName()).append("=? where ");
             }
         }
 
-            try {
-                ps = con.prepareStatement(sql_sb);
-                ps.executeUpdate();
+        // 默认设置第二个属性为主键，且更改时通过第二个属性的值（id）进行修改
+        sql_sb.append(fields[1].getName()).append("=?");
 
-            } catch (SQLException e) {
-                e.printStackTrace();
+        try {
+            ps = con.prepareStatement(sql_sb.toString());
+
+            for (int i=1; i < fields.length; i++) {
+                fields[i].setAccessible(true);  // 设置可以访问私有属性
+                ps.setObject(i, fields[i].get(obj));  // 对于预编译的SQL语句中的？进行赋值
             }
+
+            fields[1].setAccessible(true);
+            ps.setObject(fields.length, fields[1].get(obj));  // 所以属性值设置完毕后，设置条件值
+            ps.execute();  // 执行SQL语句
+
+        } catch (SQLException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
 
     }
 

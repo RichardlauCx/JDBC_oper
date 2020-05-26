@@ -6,14 +6,15 @@ package com.company;
 //  @ file   : Richard.Java
 //  @ IDE    : IDEA
 
-public class Test {
+public class table_1 {
+    // 和数据库中表结构字段名以及类型一致
     private int column_1;
     private int id;
     private String name;
     private String sex;
     private int age;
 
-    public Test(int column_1, int id, String name, String sex, int age) {
+    public table_1(int column_1, int id, String name, String sex, int age) {
         this.column_1 = column_1;
         this.id = id;
         this.name = name;
@@ -21,7 +22,7 @@ public class Test {
         this.age = age;
     }
 
-    public Test() {
+    public table_1() {
     }
 
     public int getColumn_1() {

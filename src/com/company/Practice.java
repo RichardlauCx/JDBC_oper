@@ -6,7 +6,6 @@ package com.company;
 //  @ file   : Richard.Java
 //  @ IDE    : IDEA
 
-import java.io.FileReader;
 import java.lang.reflect.Field;
 
 public class Practice {
@@ -14,8 +13,8 @@ public class Practice {
     private static String name;
 
     public static void main(String[] args) {
-        Object obj = new Test();
-        Test test = new Test();
+        Object obj = new table_1();
+        table_1 table1 = new table_1();
 //        Class<?> c = obj.getClass();
         Class<?> c = obj.getClass();
 //        Class<?> c = test.getClass();
