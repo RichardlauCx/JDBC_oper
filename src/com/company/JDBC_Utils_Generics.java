@@ -6,6 +6,9 @@ package com.company;
 //  @ file   : Richard.Java
 //  @ IDE    : IDEA
 
+import com.sun.xml.internal.bind.v2.TODO;
+import jdk.internal.org.objectweb.asm.TypeReference;
+
 import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.ArrayList;
@@ -79,7 +82,7 @@ public class JDBC_Utils_Generics {
 
     public void inserts(Object obj) throws SQLException {
         // 添加操作
-        PreparedStatement ps = null;
+        PreparedStatement ps;
         Class<?> c = obj.getClass();
         StringBuilder sql_sb = new StringBuilder("insert into " + c.getSimpleName() + "(");  // test(column_1, id, name, sex, age)values(?,?,?)");
         Connection conn = getConn();
@@ -125,21 +128,20 @@ public class JDBC_Utils_Generics {
     }
 
 
-    public List<table_1> findAll() throws SQLException {
-        /**
-         * 查询所有数据
-         * @return 查询到的以行为单位，以Test对象为元素的动态数组
+    public <T> List<T> selectAll(Class<T> c) throws SQLException {
+        /*
+         * @param c
+         * 通过对象的Class获取对应表中的所有记录
+         * @return 查询到的以行为单位，以T对象为元素的动态数组
          * @throws SQLException
          */
 
-        int n = 17;  // 字符重复次数
-        String temp = " ";  // 重复的字符
-        String joint = String.join("", Collections.nCopies(n - 1, temp));
         PreparedStatement pre_state = null;
         ResultSet resultSet = null;
-        table_1 table1 = null;
-        List<table_1> table1List = new ArrayList<table_1>();
-        String sql = "select * from table_1";
+        List<T> table1List = new ArrayList<>();
+        // 这种泛型只需写在List<>里边即可。 List里边声明了泛型以后，再在ArrayList里边声明也重复冗余的。
+        String sql = "select * from " + c.getSimpleName() + ";";
+        Field[] fields = c.getDeclaredFields();
         Connection conn = getConn();
 
         try {
@@ -149,57 +151,23 @@ public class JDBC_Utils_Generics {
 
             while (resultSet.next()) {
                 // 循环获取每一行的数据，并以对象为元素存入动态数组中
-                table1 = new table_1();
-                table1.setColumn_1(resultSet.getInt(1));
-                table1.setId(resultSet.getInt(2));
-                table1.setName(resultSet.getString(3));
-                table1.setSex(resultSet.getString(4));
-                table1.setAge(resultSet.getInt(5));
+                T t_obj = c.newInstance();  // 通过反射，构造一个T类型的实例
 
-                table1List.add(table1);
+                for (Field field : fields) {
+                    field.setAccessible(true);
+                    field.set(t_obj, resultSet.getObject(field.getName()));  // //设置obj对象的fields[i]属性的值
+                }
+
+                table1List.add(t_obj);
+
             }
-
-            System.out.println("col" + joint + "id" + joint + "name" + joint + "gender" + joint + "age");
-            for (table_1 rows: table1List) {
-                // 取出数据项
-                System.out.print(rows.getColumn_1() + " ");
-                System.out.print(rows.getId() + " ");
-                System.out.print(rows.getName() + " ");
-                System.out.print(rows.getSex() + " ");
-                System.out.println(rows.getAge());
-            }
-
-            /*
-            while (resultSet.next()) {
-                // 循环判断表下一行是否还有数据（通过列的索引查询）
-                int col = resultSet.getInt(1);
-                int id = resultSet.getInt(2);
-                String name = resultSet.getString(3);
-                String gender = resultSet.getString(4);
-                int age = resultSet.getInt(5);
-
-                System.out.format("%d%20d%20s%20s%20d\n", col, id, name, gender, age);
-            }
-             */
-
-            /*
-            while (resultSet.next()) {
-                // 循环判断表下一行是否还有数据（通过列名来查询）
-                int col = resultSet.getInt("column_1");
-                int id = resultSet.getInt("id");
-                String name = resultSet.getString("name");
-                String gender = resultSet.getString("sex");
-                int age = resultSet.getInt("age");
-
-                System.out.format("%d%20d%20s%20s%20d\n", col, id, name, gender, age);
-            }
-
-             */
 
         } catch (SQLException e) {
             e.printStackTrace();
             throw new SQLException("查询所有数据失败");
 
+        } catch (IllegalAccessException | InstantiationException e) {
+            e.printStackTrace();
         } finally {
             close(conn, pre_state, null, resultSet);
         }
@@ -209,12 +177,12 @@ public class JDBC_Utils_Generics {
 
 
     public void upDate(Object obj) {
-        /**
+        /*
          * 更新操作
          * @param obj 用户传入与数据库中表结构字段名以及类型一致
          */
 
-        PreparedStatement ps = null;
+        PreparedStatement ps;
         Class<?> c = obj.getClass();  // 获取obj的类实例
         StringBuilder sql_sb = new StringBuilder("update " + c.getSimpleName() + " set ");
         // 利用StringBuilder进行修改SQL语句的构造，单线程进行，效率更高，但不具备线程安全
@@ -255,17 +223,29 @@ public class JDBC_Utils_Generics {
     }
 
 
-    public void deletes(int id) {
-        // 删除操作（根据id值）
-        Connection con = getConn();
-        PreparedStatement ps = null;
+    public void deletes(Object obj) {
+        /*
+         * 通过主键(默认第二个属性)删除对象
+         * @param obj
+         * @return
+         */
 
-        String sql = "delete from table_1 where id =" + id;
+        PreparedStatement ps;
+        Connection con = getConn();
+        Class<?> c = obj.getClass();
+        Field[] fields = c.getDeclaredFields();
+        StringBuilder sql = new StringBuilder("delete from ");  // table_1 where id = + id);
+
+        sql.append(c.getSimpleName()).append(" where ");
+        fields[1].setAccessible(true);
+        sql.append(fields[1].getName()).append(" = ");
 
         try {
-            ps = con.prepareStatement(sql);
+            sql.append(fields[1].get(obj));
+            ps = con.prepareStatement(sql.toString());
             ps.executeUpdate();
-        } catch (SQLException e) {
+
+        } catch (IllegalAccessException | SQLException e) {
             e.printStackTrace();
         }
 
